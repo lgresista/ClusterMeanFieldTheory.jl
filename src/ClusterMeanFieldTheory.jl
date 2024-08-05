@@ -1,5 +1,7 @@
 module ClusterMeanFieldTheory
 
-# Write your package code here.
+    include("ExactDiagonalization.jl")
+    include("SpinCluster.jl")
+    include("meanfield.jl")
 
 end
