@@ -1,11 +1,6 @@
 function get_cluster_bonds(uc, bonds, L)
-    L = [2, 2]
-
     periodiclattice = Lattice(L = L, periodic = [true, true])
     openlattice = Lattice(L = L, periodic = [false, false])
-
-    locs = [site_to_loc(s, uc, periodiclattice) for s in 1:nsites(uc, periodiclattice)]
-    pos = [loc_to_pos(l..., uc) for l in locs]
 
     interclusterbonds = []
     intraclusterbonds = []
