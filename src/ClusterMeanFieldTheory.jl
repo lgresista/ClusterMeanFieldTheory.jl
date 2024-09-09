@@ -1,9 +1,12 @@
 module ClusterMeanFieldTheory
     
     using LatticeUtilities
+    import LatticeUtilities: nsites
+    using LinearAlgebra
+    
 
-    include("ExactDiagonalization.jl")
     include("SpinCluster.jl")
-    include("meanfield.jl")
+    include("MeanfieldCluster.jl")
 
+    export UnitCell, Bond, Lattice, nsites, site_to_loc, loc_to_pos
 end

@@ -5,6 +5,7 @@ version = "1.0.0-DEV"
 
 [deps]
 LatticeUtilities = "33fcf0eb-3ae3-43db-bfbc-1d92a3639bd1"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [compat]
 julia = "1.6.7"
