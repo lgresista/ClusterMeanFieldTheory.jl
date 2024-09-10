@@ -17,8 +17,6 @@ function set_magnetizations!(mfcluster :: MeanFieldCluster, new_magnetizations :
     return nothing
 end
 
-#idea initialize cluster with intra and meanfiled bonds, calculate fields automatically
-
 # self-consistently converge mean-field cluster, iteratively updating the magnetic fields according to mean-field bonds
 function converge!(mfcluster :: MeanFieldCluster; max_iterations = 100, abstol = 1e-8, reltol = 1e-4, verbose = true)
   
@@ -31,11 +29,11 @@ function converge!(mfcluster :: MeanFieldCluster; max_iterations = 100, abstol =
 
     abserror = norm(new_magnetizations .- mfcluster.magnetizations)
     relerror = abserror/maximum(norm.(mfcluster.magnetizations))
-    iteration = 1
+    iteration = 0
     
     if verbose println("Starting iteration with initial absolute error = $(abserror) and relative error of $relerror") end
 
-    while (abserror > abstol || relerror > reltol) && iteration <= max_iterations
+    while abserror > abstol && relerror > reltol && iteration < max_iterations
 
         # update magnetizations
         set_magnetizations!(mfcluster, new_magnetizations)
@@ -59,17 +57,14 @@ function converge!(mfcluster :: MeanFieldCluster; max_iterations = 100, abstol =
     set_magnetizations!(mfcluster, new_magnetizations)
     recalculate_magnetic_fields!(mfcluster)
 
-    if verbose println("Converged iteration after $iteration iterations. Absolute error: $abserror, relative error: $relerror") end
+    is_converged = iteration < max_iterations
+    if verbose println("Converged: $(is_converged). Iterations: $iteration/$(max_iterations). Absolute error: $abserror, relative error: $relerror") end
+
+    return is_converged, iteration, abserror, relerror
 end
 
-
-
-# idea spinHamiltonin type containing
-# meanfieldSpinCluster type containing everything including spinHamiltonian
-
-# still needs to be tested
-# given magnetizations and meanfieldbonds, add the mean-field-approximated interactions to the
-# magnetic fields
+# recalculate the effective magnetic fields from magnetizations and mean-field bonds
+# NOTE: All real magnetic fields get set to zero. Not yet compatible!
 function recalculate_magnetic_fields!(mfcluster :: MeanFieldCluster)
 
     # deref 
@@ -96,8 +91,8 @@ function recalculate_magnetic_fields!(mfcluster :: MeanFieldCluster)
     return nothing
 end
 
+# calculate constant contribution from mean-field bonds to the hamiltonian/energy
 function calculate_energyshift(mfcluster :: MeanFieldCluster)
-
     # deref magnetizations
     magnetizations = mfcluster.magnetizations
 
@@ -119,7 +114,7 @@ end
 
 # given a geometric unitcell, bonds, and the linear size of the spin cluster,
 # calculate all inter and intracluster bonds. interclusterbonds will be treated
-# in a mean-field fashion (i.e. added as magnetic fields), while interclusterbonds
+# in a mean-field fashion (i.e. added as magnetic fields), while intraclusterbonds
 # will be treated exactly
 function get_meanfield_cluster_interactions(uc, bonds, L)
     #initialize periodic lattice (containing all bonds)
