@@ -3,7 +3,7 @@ module ClusterMeanFieldTheory
     using LatticeUtilities
     import LatticeUtilities: nsites
     using LinearAlgebra
-    
+    using NLsolve
 
     include("SpinCluster.jl")
     include("MeanfieldCluster.jl")

@@ -24,7 +24,6 @@ function SpinCluster(
     return SpinCluster(positions, interactions, magnetic_fields, length(positions))
 end
 
-
 ## functions to manipulate a state which is represented by an unsigned integer ##
 
 # get bit at position i
@@ -55,12 +54,12 @@ function flipbits(n::Unsigned, i::Integer, j::Integer)
 end
 
 # convert bit (0/1) to spin (-0.5/0.5)
-function getspin(bool) :: Float64
+function getspin(bool)::Float64
     return -0.5 + bool
 end
 
 # get spin at position i
-function getspin(n::Unsigned, i::Integer) :: Float64
+function getspin(n::Unsigned, i::Integer)::Float64
     return getspin(getbit(n, i))
 end
 
@@ -69,13 +68,14 @@ end
 # calculate Hamiltonian matrix and store in H, given a spin model
 function calculate_hamiltonianmatrix!(H, spincluster::SpinCluster)
     N = spincluster.nsites
-   
+
+    H .= 0.0
+
     #iterate over all states
-    for n in zero(UInt):(N^2 - 1)
+    for n in zero(UInt):(2^N - 1)
         # iterate over Heisenberg interactinos
         for interaction in spincluster.interactions
-
-            #unpack interaction and shift to index begining at zero
+            # unpack interaction and shift to index begining at zero
             i = interaction.sites[1] - 1
             j = interaction.sites[2] - 1
 
@@ -95,10 +95,10 @@ function calculate_hamiltonianmatrix!(H, spincluster::SpinCluster)
         end
 
         #iterate over magnetic fields
-        for i in 0:N-1
+        for i in 0:(N - 1)
 
             #get magnetic field vector at site i
-            h = spincluster.magnetic_fields[i+1]
+            h = spincluster.magnetic_fields[i + 1]
 
             #get S^z eigenvalue (±1/2) of spin i
             si = getspin(n, i)
@@ -108,56 +108,57 @@ function calculate_hamiltonianmatrix!(H, spincluster::SpinCluster)
 
             #h^x S^x + h^y S^y contribution
             m = flipbit(n, i)
-            H[m + 1, n + 1] += h[1]/2 + im * si * h[2]
+            H[m + 1, n + 1] += h[1] / 2 + im * si * h[2]
         end
     end
 end
 
-calculate_hamiltonianmatrix!(H :: Hermitian, spincluster :: SpinCluster) = calculate_hamiltonianmatrix!(H.data, spincluster)
+function calculate_hamiltonianmatrix!(H::Hermitian, spincluster::SpinCluster)
+    return calculate_hamiltonianmatrix!(H.data, spincluster)
+end
 
 # out-of-place version
 function calculate_hamiltonianmatrix(spincluster::SpinCluster)
     N = spincluster.nsites
-    H = Hermitian(zeros(ComplexF64, N^2, N^2))
+    H = Hermitian(zeros(ComplexF64, 2^N, 2^N))
     calculate_hamiltonianmatrix!(H, spincluster)
     return H
 end
-
 
 # needs testing!
 # calcualte matrix representation of all spin operators S_i^a for N sites,
 # where i = 1:N, a = x,y,z
 function calculate_spinoperators(N)
     # spin operators as matrices for each site and each spin component S^x, S^y, S^z
-    spinoperators = [[Hermitian(zeros(ComplexF64, N^2, N^2)) for _ in 1:3] for _ in 1:N]
+    spinoperators = [[Hermitian(zeros(ComplexF64, 2^N, 2^N)) for _ in 1:3] for _ in 1:N]
 
     #iterate over all states
-    for n in zero(UInt):(N^2 - 1)
+    for n in zero(UInt):(2^N - 1)
 
         #iterate over all sites
-        for i in 0:N-1
+        for i in 0:(N - 1)
 
             #get S^z eigenvalue (±1/2) of spin i
             si = getspin(n, i)
 
             #get state with flipped bit/spin at site i
             m = flipbit(n, i)
-
+            
             #add S^x, S^y and S^z contributions
-            S = spinoperators[i+1]
-            S[1].data[m + 1, n + 1] += 1/2
+            S = spinoperators[i + 1]
+            S[1].data[m + 1, n + 1] += 1 / 2
             S[2].data[m + 1, n + 1] += im * si
-            S[3].data[n+1,n+1] += si
+            S[3].data[n + 1, n + 1] += si
         end
     end
 
     return spinoperators
-end    
+end
 
 ## Diagonalization routines and observables ##
 
 # calculate expectation value given a state and operator in matrix form
-function expectation_value(operator :: Hermitian, state)
+function expectation_value(operator::Hermitian, state)
     return real(dot(state, operator, state))
 end
 
@@ -173,7 +174,7 @@ function calculate_magnetizations!(magnetizations, spinoperators, state)
     for (m, S) in zip(magnetizations, spinoperators)
         for i in eachindex(m)
             m[i] = expectation_value(S[i], state)
-        end 
+        end
     end
 end
 
