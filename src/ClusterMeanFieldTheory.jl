@@ -4,6 +4,7 @@ module ClusterMeanFieldTheory
     import LatticeUtilities: nsites
     using LinearAlgebra
     using NLsolve
+    using SparseArrays
 
     include("exact_diagonalization.jl")
     include("mean_field_cluster.jl")

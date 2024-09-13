@@ -12,6 +12,7 @@ magnetic_fields(mfcluster::MeanFieldCluster) = mfcluster.spincluster.magnetic_fi
 function calculate_hamiltonianmatrix(mfcluster::MeanFieldCluster)
     return calculate_hamiltonianmatrix(mfcluster.spincluster)
 end
+
 function calculate_hamiltonianmatrix!(H, mfcluster::MeanFieldCluster)
     return calculate_hamiltonianmatrix!(H, mfcluster.spincluster)
 end
@@ -26,7 +27,19 @@ function set_magnetizations!(
     return nothing
 end
 
-# same function for a flat magnetization vector instead of a vector of vectors (for NLsolve)
+# set magnetizations with damping (DOES NOT UPDATE MAGNETIC FIELDS AUTOMATICALLY)
+function set_magnetizations!(
+    mfcluster::MeanFieldCluster, new_magnetizations::AbstractVector{<:AbstractVector}, β :: Float64
+)
+    for i in eachindex(mfcluster.magnetizations)
+        m_old = mfcluster.magnetizations[i]
+        m_new = new_magnetizations[i]
+        @. mfcluster.magnetizations[i] = (1-β) * m_old + β * m_new
+    end
+    return nothing
+end
+
+# same functions for a flat magnetization vector instead of a vector of vectors (for NLsolve)
 function set_magnetizations!(
     mfcluster::MeanFieldCluster, new_magnetizations::Vector{Float64}
 )
@@ -35,8 +48,17 @@ function set_magnetizations!(
     )
 end
 
+function set_magnetizations!(
+    mfcluster::MeanFieldCluster, new_magnetizations::Vector{Float64}, β
+)
+    return set_magnetizations!(
+        mfcluster, eachcol(reshape(new_magnetizations, (3, nsites(mfcluster)))), β
+    )
+end
+
+
 # recalculate the effective magnetic fields from magnetizations and mean-field bonds
-# NOTE: All real magnetic fields get set to zero. Not yet compatible!
+# NOTE: All physical magnetic fields get set to zero. Not yet compatible with actual magnetic fields!
 function recalculate_magnetic_fields!(mfcluster::MeanFieldCluster)
 
     # deref 
@@ -137,7 +159,7 @@ end
 
 # self-consistently converge mean-field cluster, iteratively updating the magnetic fields according to mean-field bonds
 function fixedpoint_iteration!(
-    mfcluster::MeanFieldCluster; max_iterations=1000, abstol=1e-8, verbose=true
+    mfcluster::MeanFieldCluster; max_iterations=1000, abstol=1e-8, β = 1.0, verbose=true
 )
     verbose && println("Setting up self-consistent solution of meanfield cluster")
 
@@ -154,7 +176,7 @@ function fixedpoint_iteration!(
     while abserror > abstol && iteration < max_iterations
 
         # update magnetizations
-        set_magnetizations!(mfcluster, new_magnetizations)
+        set_magnetizations!(mfcluster, new_magnetizations, β)
 
         # recalculate magnetic fields from new magnetizations
         recalculate_magnetic_fields!(mfcluster)
