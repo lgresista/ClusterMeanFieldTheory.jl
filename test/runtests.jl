@@ -1,12 +1,20 @@
 using ClusterMeanFieldTheory
-using ClusterMeanFieldTheory: setbit, unsetbit, getbit, flipbit, flipbits, getspin, HeisenbergInteraction, SpinCluster, calculate_hamiltonianmatrix, calculate_spinoperators
 using LinearAlgebra
 using Test
+using LatticeUtilities
 
-@testset "Bit-wise operations" begin
-    include("test-bitwise-operations.jl")
-end
+import ClusterMeanFieldTheory as CMFT
 
-@testset "Exact diagonalization" begin
-    include("test-exact-diagonlization.jl")
+@testset "Cluster Mean Field theory" begin
+    @testset "Bit-wise operations" begin
+        include("test-bitwise-operations.jl")
+    end
+
+    @testset "Exact diagonalization" begin
+        include("test-exact-diagonlization.jl")
+    end
+
+    @testset "Mean field clusters of the J1-J2 Heisenberg model on the square lattice" begin
+        include("test-square-lattice-clusters.jl")
+    end
 end

@@ -66,7 +66,7 @@ end
 ## set up matrix representation of different operators ##
 
 # calculate Hamiltonian matrix and store in H, given a spin model
-function calculate_hamiltonianmatrix!(H, spincluster::SpinCluster)
+function calculate_hamiltonianmatrix!(H :: AbstractMatrix, spincluster::SpinCluster)
     N = spincluster.nsites
 
     H .= 0.0
@@ -113,6 +113,7 @@ function calculate_hamiltonianmatrix!(H, spincluster::SpinCluster)
     end
 end
 
+# special version for Hermitian matrices
 function calculate_hamiltonianmatrix!(H::Hermitian, spincluster::SpinCluster)
     return calculate_hamiltonianmatrix!(H.data, spincluster)
 end
@@ -143,7 +144,7 @@ function calculate_spinoperators(N)
 
             #get state with flipped bit/spin at site i
             m = flipbit(n, i)
-            
+
             #add S^x, S^y and S^z contributions
             S = spinoperators[i + 1]
             S[1].data[m + 1, n + 1] += 1 / 2
@@ -162,16 +163,27 @@ function expectation_value(operator::Hermitian, state)
     return real(dot(state, operator, state))
 end
 
-# calculate the minmal eigenvalue and associated eigenvector of a matrix
-function eigenmin(mat)
+#= Old version not working on sparse matrices (faster only for small matrices)
+function eigenmin(mat :: AbstractMatrix)
     vals, vecs = eigen(mat, 1:1)
     return vals[1], vecs[:, 1]
 end
+=#
+
+# calculate the minmal eigenvalue and associated eigenvector of a matrix (compatible with sprase matrices)
+function eigenmin(H :: Hermitian)
+    decomp, history = partialschur(H, which = :SR, nev = 1)
+    # for Hermitian matrices the schur decomposition is an eigenvalue decomposition (otherwise add eigencomp(decomp))
+    return real(decomp.eigenvalues[1]), decomp.Q[:, 1]
+end
+
 
 # calculate magnetization m_i^a = <state|S_i^a|state> for all spinoperators
 # store into magnetizations
 function calculate_magnetizations!(magnetizations, spinoperators, state)
+    # iterate over sites
     for (m, S) in zip(magnetizations, spinoperators)
+        # iterate over spin components (x, y, z)
         for i in eachindex(m)
             m[i] = expectation_value(S[i], state)
         end

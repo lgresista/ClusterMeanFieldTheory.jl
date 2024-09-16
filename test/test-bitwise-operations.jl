@@ -7,7 +7,7 @@ for _ in 0:9
 
     # setbit
     for i in 0:7
-        np = setbit(n, i)
+        np = CMFT.setbit(n, i)
 
         vp = copy(v)
         vp[i+1] = 1
@@ -17,7 +17,7 @@ for _ in 0:9
 
     # unsetbit
     for i in 0:7
-        np = unsetbit(n, i)
+        np = CMFT.unsetbit(n, i)
 
         vp = copy(v)
         vp[i+1] = 0
@@ -27,7 +27,7 @@ for _ in 0:9
 
     # flipbit
     for i in 0:7
-        np = flipbit(n, i)
+        np = CMFT.flipbit(n, i)
 
         vp = copy(v)
 
@@ -43,7 +43,7 @@ for _ in 0:9
     # flipbits
     for i in 0:7
         for j in 0:7
-            np = flipbits(n, i, j)
+            np = CMFT.flipbits(n, i, j)
 
             vp = copy(v)
             if vp[i+1] == 0

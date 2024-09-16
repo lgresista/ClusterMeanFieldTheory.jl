@@ -1,13 +1,30 @@
 module ClusterMeanFieldTheory
-    
-    using LatticeUtilities
-    import LatticeUtilities: nsites
-    using LinearAlgebra
-    using NLsolve
-    using SparseArrays
 
-    include("exact_diagonalization.jl")
-    include("mean_field_cluster.jl")
+using LatticeUtilities
+using LinearAlgebra
+using NLsolve
+using SparseArrays
+using ArnoldiMethod
 
-    export UnitCell, Bond, Lattice, nsites, site_to_loc, loc_to_pos
+import LatticeUtilities: nsites
+
+include("exact_diagonalization.jl")
+include("mean_field_cluster.jl")
+
+# exact diagonalization 
+export HeisenbergInteraction, SpinCluster
+export calculate_hamiltonianmatrix!, calculate_hamiltonianmatrix
+export calculate_spinoperators
+export expectation_value
+export eigenmin
+export calculate_magnetizations!,calculate_magnetizations
+
+# CMFT
+export MeanFieldCluster
+export nsites, magnetic_fields
+export set_magnetizations!, recalculate_magnetic_fields!
+export calculate_groundstate_energy, calculate_energyshift
+export get_meanfield_cluster_interactions
+export fixedpoint_iteration!, anderson_acceleration!
+
 end
