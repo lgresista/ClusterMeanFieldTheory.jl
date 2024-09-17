@@ -172,9 +172,21 @@ end
 
 # calculate the minmal eigenvalue and associated eigenvector of a matrix (compatible with sprase matrices)
 function eigenmin(H :: Hermitian)
-    decomp, history = partialschur(H, which = :SR, nev = 1)
+    decomp, history = partialschur(H, which = :SR, nev = min(size(H, 1), 5))
     # for Hermitian matrices the schur decomposition is an eigenvalue decomposition (otherwise add eigencomp(decomp))
-    return real(decomp.eigenvalues[1]), decomp.Q[:, 1]
+    idx = argmin(decomp.eigenvalues)
+    return minimum(real.(decomp.eigenvalues)), decomp.Q[:, 1]
+end
+
+# calculate the minmal eigenvalue and associated eigenvector of a matrix (compatible with sprase matrices)
+function eigenmin(H :: Hermitian)
+    # calculate partial schur decomposition
+    decomp, history = partialschur(H, which = :SR, nev = min(size(H, 1), 9))
+
+    # for Hermitian matrices the schur decomposition is an eigenvalue decomposition (otherwise add eigencomp(decomp))
+    # select lowest eigenvalue (sometimes order not correct)
+    idx = argmin(real, decomp.eigenvalues)
+    return real(decomp.eigenvalues[idx]), decomp.Q[:, idx]
 end
 
 
