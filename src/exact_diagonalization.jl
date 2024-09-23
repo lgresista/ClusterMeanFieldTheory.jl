@@ -178,35 +178,35 @@ function add_matrix_element!(rows, cols, vals, m, n, v)
     return nothing
 end
 
-# needs testing!
-# calcualte matrix representation of all spin operators S_i^a for N sites,
-# where i = 1:N, a = x,y,z
 function calculate_spinoperators(N)
+
     # spin operators as matrices for each site and each spin component S^x, S^y, S^z
-    spinoperators = [[Hermitian(spzeros(ComplexF64, 2^N, 2^N)) for _ in 1:3] for _ in 1:N]
+    spinoperators = [Vector{Hermitian{ComplexF64, SparseMatrixCSC{ComplexF64, Int64}}}(undef, 3) for _  in 1:N]
 
-    #iterate over all states
-    for n in zero(UInt):(2^N - 1)
-
-        #iterate over all sites
-        for i in 0:(N - 1)
-
+    # buffer for S^z eigenvalues
+    szs = zeros(Float64, 2^N)
+    
+    # buffer state m from spinflip
+    ms = zeros(UInt64, 2^N)
+    
+    #iterate over all sites
+    for i in 0:(N - 1)        
+        
+        #iterate over all states
+        for n in zero(UInt):(2^N - 1)
             #get S^z eigenvalue (±1/2) of spin i
-            si = getspin(n, i)
-
-            #get state with flipped bit/spin at site i
-            m = flipbit(n, i)
-
-            #add S^x, S^y and S^z contributions
-            S = spinoperators[i + 1]
-            S[1].data[m + 1, n + 1] += 1 / 2
-            S[2].data[m + 1, n + 1] += im * si
-            S[3].data[n + 1, n + 1] += si
+            szs[n+1] = getspin(n, i)
+            ms[n+1] = flipbit(n, i) + 1
         end
+        
+        spinoperators[i+1][1] = Hermitian(sparse(ms, 1:2^N, fill(0.5, 2^N))) #x
+        spinoperators[i+1][2] = Hermitian(sparse(ms, 1:2^N, im .* szs)) #y
+        spinoperators[i+1][3] = Hermitian(sparse(1:2^N, 1:2^N, szs)) #z
     end
-
+        
     return spinoperators
 end
+
 
 ## Diagonalization routines and observables ##
 
