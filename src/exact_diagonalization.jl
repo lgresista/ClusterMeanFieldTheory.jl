@@ -66,7 +66,7 @@ end
 ## set up matrix representation of different operators ##
 
 # calculate Hamiltonian matrix and store in H, given a spin model
-function calculate_hamiltonianmatrix!(H :: AbstractMatrix, spincluster::SpinCluster)
+function calculate_hamiltonianmatrix!(H::AbstractMatrix, spincluster::SpinCluster)
     N = spincluster.nsites
 
     H .= 0.0
@@ -118,12 +118,64 @@ function calculate_hamiltonianmatrix!(H::Hermitian, spincluster::SpinCluster)
     return calculate_hamiltonianmatrix!(H.data, spincluster)
 end
 
-# out-of-place version
+# out-of-place version (faster then initializing with spzeros for large matrices)
 function calculate_hamiltonianmatrix(spincluster::SpinCluster)
     N = spincluster.nsites
-    H = Hermitian(zeros(ComplexF64, 2^N, 2^N))
-    calculate_hamiltonianmatrix!(H, spincluster)
-    return H
+
+    rows = UInt64[]
+    cols = UInt64[]
+    vals = ComplexF64[]
+
+    #iterate over all states
+    for n in zero(UInt):(2^N - 1)
+        # iterate over Heisenberg interactinos
+        for interaction in spincluster.interactions
+            # unpack interaction and shift to index begining at zero
+            i = interaction.sites[1] - 1
+            j = interaction.sites[2] - 1
+
+            J = interaction.J
+
+            if getbit(n, i) == getbit(n, j)
+                add_matrix_element!(rows, cols, vals, n + 1, n + 1, J / 4)
+            else
+                #Sz contribution
+                add_matrix_element!(rows, cols, vals, n + 1, n + 1, -J / 4)
+
+                #S± contribution (spin flip)
+                m = flipbits(n, i, j)
+                add_matrix_element!(rows, cols, vals, m + 1, n + 1, J / 2)
+            end
+        end
+
+        #iterate over magnetic fields
+        for i in 0:(N - 1)
+
+            #get magnetic field vector at site i
+            h = spincluster.magnetic_fields[i + 1]
+
+            #get S^z eigenvalue (±1/2) of spin i
+            si = getspin(n, i)
+
+            #h^z S^z contribution
+            add_matrix_element!(rows, cols, vals, n + 1, n + 1, si * h[3])
+
+            #h^x S^x + h^y S^y contribution
+            m = flipbit(n, i)
+            add_matrix_element!(rows, cols, vals, m + 1, n + 1, h[1] / 2 + im * si * h[2])
+        end
+    end
+
+    return Hermitian(sparse(rows, cols, vals, 2^N, 2^N))
+end
+
+# function to add entry to sparse matrix in coordinate format (COO)
+function add_matrix_element!(rows, cols, vals, m, n, v)
+    push!(rows, m)
+    push!(cols, n)
+    push!(vals, v)
+
+    return nothing
 end
 
 # needs testing!
@@ -131,7 +183,7 @@ end
 # where i = 1:N, a = x,y,z
 function calculate_spinoperators(N)
     # spin operators as matrices for each site and each spin component S^x, S^y, S^z
-    spinoperators = [[Hermitian(zeros(ComplexF64, 2^N, 2^N)) for _ in 1:3] for _ in 1:N]
+    spinoperators = [[Hermitian(spzeros(ComplexF64, 2^N, 2^N)) for _ in 1:3] for _ in 1:N]
 
     #iterate over all states
     for n in zero(UInt):(2^N - 1)
@@ -170,25 +222,23 @@ function eigenmin(mat :: AbstractMatrix)
 end
 =#
 
-# calculate the minmal eigenvalue and associated eigenvector of a matrix (compatible with sprase matrices)
-function eigenmin(H :: Hermitian)
-    decomp, history = partialschur(H, which = :SR, nev = min(size(H, 1), 5))
-    # for Hermitian matrices the schur decomposition is an eigenvalue decomposition (otherwise add eigencomp(decomp))
-    idx = argmin(decomp.eigenvalues)
-    return minimum(real.(decomp.eigenvalues)), decomp.Q[:, 1]
-end
-
-# calculate the minmal eigenvalue and associated eigenvector of a matrix (compatible with sprase matrices)
+#= old version using Arnoldi method from ArnoldiMethod.jl (compatible with sparse matrices but sometimes unstable)
 function eigenmin(H :: Hermitian)
     # calculate partial schur decomposition
     decomp, history = partialschur(H, which = :SR, nev = min(size(H, 1), 9))
 
     # for Hermitian matrices the schur decomposition is an eigenvalue decomposition (otherwise add eigencomp(decomp))
     # select lowest eigenvalue (sometimes order not correct)
-    idx = argmin(real, decomp.eigenvalues)
+    idx = argmin(real.(decomp.eigenvalues))
     return real(decomp.eigenvalues[idx]), decomp.Q[:, idx]
 end
+=#
 
+# calculate lowest eigenvalue and vector using Lanczos method from KrylovKit.jl
+function eigenmin(H)
+    vals, vecs, info = eigsolve(H, 1, :SR)
+    return vals[1], vecs[1]
+end
 
 # calculate magnetization m_i^a = <state|S_i^a|state> for all spinoperators
 # store into magnetizations

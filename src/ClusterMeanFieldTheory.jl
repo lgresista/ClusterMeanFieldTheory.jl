@@ -4,7 +4,7 @@ using LatticeUtilities
 using LinearAlgebra
 using NLsolve
 using SparseArrays
-using ArnoldiMethod
+using KrylovKit
 
 import LatticeUtilities: nsites
 

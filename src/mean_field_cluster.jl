@@ -29,12 +29,14 @@ end
 
 # set magnetizations with damping (DOES NOT UPDATE MAGNETIC FIELDS AUTOMATICALLY)
 function set_magnetizations!(
-    mfcluster::MeanFieldCluster, new_magnetizations::AbstractVector{<:AbstractVector}, β :: Float64
+    mfcluster::MeanFieldCluster,
+    new_magnetizations::AbstractVector{<:AbstractVector},
+    β::Float64,
 )
     for i in eachindex(mfcluster.magnetizations)
         m_old = mfcluster.magnetizations[i]
         m_new = new_magnetizations[i]
-        @. mfcluster.magnetizations[i] = (1-β) * m_old + β * m_new
+        @. mfcluster.magnetizations[i] = (1 - β) * m_old + β * m_new
     end
     return nothing
 end
@@ -55,7 +57,6 @@ function set_magnetizations!(
         mfcluster, eachcol(reshape(new_magnetizations, (3, nsites(mfcluster)))), β
     )
 end
-
 
 # recalculate the effective magnetic fields from magnetizations and mean-field bonds
 # NOTE: All physical magnetic fields get set to zero. Not yet compatible with actual magnetic fields!
@@ -105,13 +106,12 @@ function calculate_energyshift(mfcluster::MeanFieldCluster)
     return energyshift
 end
 
-function calculate_groundstate_energy(mfcluster :: MeanFieldCluster)    
+function calculate_groundstate_energy(mfcluster::MeanFieldCluster)
     h = calculate_hamiltonianmatrix(mfcluster.spincluster)
     e0 = eigenmin(h)[1]
     eshift = calculate_energyshift(mfcluster)
-    return (e0 + eshift)/nsites(mfcluster)
+    return (e0 + eshift) / nsites(mfcluster)
 end
-
 
 # given a geometric unitcell, bonds, and the linear size of the spin cluster,
 # calculate all inter and intracluster bonds. interclusterbonds will be treated
@@ -159,11 +159,15 @@ end
 
 # self-consistently converge mean-field cluster, iteratively updating the magnetic fields according to mean-field bonds
 function fixedpoint_iteration!(
-    mfcluster::MeanFieldCluster; max_iterations=1000, abstol=1e-8, β = 1.0, verbose=true
+    mfcluster::MeanFieldCluster;
+    spinoperators=calculate_spinoperators(nsites(mfcluster)),
+    max_iterations=1000,
+    abstol=1e-8,
+    β=1.0,
+    verbose=true,
 )
     verbose && println("Setting up self-consistent solution of meanfield cluster")
 
-    spinoperators = calculate_spinoperators(nsites(mfcluster))
     hamiltonianmatrix = calculate_hamiltonianmatrix(mfcluster.spincluster)
     groundstate_energy, groundstate = eigenmin(hamiltonianmatrix)
     new_magnetizations = calculate_magnetizations(spinoperators, groundstate)
@@ -216,7 +220,7 @@ function anderson_acceleration!(
     verbose=true,
     store_trace=false,
     show_trace=false,
-    extended_trace=false
+    extended_trace=false,
 )
     verbose && println(
         "Setting up self-consistent solution of meanfield cluster via Anderson acceleration",
@@ -258,7 +262,7 @@ function anderson_acceleration!(
         iterations=max_iterations,
         ftol=abstol,
         m=m,
-        beta = beta,
+        beta=beta,
         store_trace=store_trace,
         show_trace=show_trace,
         extended_trace=extended_trace,
