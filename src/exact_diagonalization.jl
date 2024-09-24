@@ -235,7 +235,7 @@ end
 =#
 
 # calculate lowest eigenvalue and vector using Lanczos method from KrylovKit.jl
-function eigenmin(H)
+function eigenmin(H :: AbstractMatrix)
     vals, vecs, info = eigsolve(H, 1, :SR)
     return vals[1], vecs[1]
 end
