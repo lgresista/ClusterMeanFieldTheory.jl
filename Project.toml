@@ -11,7 +11,9 @@ NLsolve = "2774e3e8-f4cf-5e23-947b-6d7e65073b56"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
+KrylovKit = "0.8"
 NLsolve = "4"
+
 julia = "1.7"
 
 [extras]
