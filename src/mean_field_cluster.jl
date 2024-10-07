@@ -192,8 +192,8 @@ function fixedpoint_iteration!(
     spinoperators=calculate_spinoperators(nsites(mfcluster)),
     max_iterations=1000,
     abstol=1e-8,
-    max_error_increase_count = 5,
     β=0.5,
+    max_error_increase_count = Inf,
     verbose=true,
 )
     verbose && println("Setting up self-consistent solution of meanfield cluster")
