@@ -244,7 +244,7 @@ function fixedpoint_iteration!(
     recalculate_magnetic_fields!(mfcluster)
 
     # check if calculation Converged
-    is_converged = iteration < max_iterations && error_increase_counter < max_error_increase_count
+    is_converged = abserror <= abstol
     
     # print information
     verbose && println(
