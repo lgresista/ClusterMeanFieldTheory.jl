@@ -113,13 +113,87 @@ function calculate_groundstate_energy(mfcluster::MeanFieldCluster)
     return (e0 + eshift) / nsites(mfcluster)
 end
 
+# given a geometric unitcell, bonds, couplings, and the linear size of the spin cluster,
+# calculate all inter and intracluster bonds. interclusterbonds will be treated
+# in a mean-field fashion (i.e. added as magnetic fields), while intraclusterbonds
+# will be treated exactly
+function get_meanfield_cluster_interactions(uc, bonds, Js, L)
+    #initialize periodic lattice (containing all bonds)
+    periodiclattice = Lattice(; L=L, periodic=[true, true])
+
+    #initialize open lattice (only containing intracluster bonds)
+    openlattice = Lattice(; L=L, periodic=[false, false])
+
+    intercluster_interactions = HeisenbergInteraction[]
+    intracluster_interactions = HeisenbergInteraction[]
+
+    # iterate over all specified bonds
+    for b in bonds
+        bond = b[1]
+        J = Js[b[2]]
+
+        # get interactions out of neighbor tables
+
+        # interactions insite the cluster
+        intrabonds = filter(
+            b -> !isempty(b), eachcol(build_neighbor_table(bond, uc, openlattice))
+        ) # filter in case table is empty
+
+        # all interactions
+        allbonds = eachcol(build_neighbor_table(bond, uc, periodiclattice))
+
+        # interactions between cluster is all bonds except the intraclusterbonds
+        interbonds = setdiff(allbonds, intrabonds)
+
+        for interbond in interbonds
+            push!(intercluster_interactions, HeisenbergInteraction(J, Tuple(interbond)))
+        end
+
+        for intrabond in intrabonds
+            push!(intracluster_interactions, HeisenbergInteraction(J, Tuple(intrabond)))
+        end
+    end
+
+    return intercluster_interactions, intracluster_interactions
+end
+
+function get_meanfield_cluster(uc, bonds, J, L)
+
+    # generate inter- and intra-cluster interactions
+    intercluster_interactions, intracluster_interactions = get_meanfield_cluster_interactions(
+        uc, bonds, J, L
+    )
+
+    # calculate positions of lattice points
+    lattice = Lattice(; L=L, periodic=[true, true])
+    locs = [site_to_loc(s, uc, lattice) for s in 1:nsites(uc, lattice)]
+    pos = [loc_to_pos(l..., uc) for l in locs]
+
+    # initialize spin-cluster with intracluster interactions and zero magnetic field
+    spincluster = SpinCluster(
+        collect.(pos), intracluster_interactions, [zeros(3) for _ in 1:length(pos)]
+    )
+
+    # set up meanfield cluster with intercluster interactions (treated by mean-field) and zero magnetic field and magnetizations
+    mfcluster = MeanFieldCluster(
+        spincluster, intercluster_interactions, [zeros(3) for _ in eachindex(pos)]
+    )
+
+    return mfcluster
+end
+
+function calculate_nsites(uc, L)
+    return uc.n * prod(L)
+end
+
 # self-consistently converge mean-field cluster, iteratively updating the magnetic fields according to mean-field bonds
 function fixedpoint_iteration!(
     mfcluster::MeanFieldCluster;
     spinoperators=calculate_spinoperators(nsites(mfcluster)),
     max_iterations=1000,
     abstol=1e-8,
-    β=1.0,
+    max_error_increase_count = 5,
+    β=0.5,
     verbose=true,
 )
     verbose && println("Setting up self-consistent solution of meanfield cluster")
@@ -127,13 +201,15 @@ function fixedpoint_iteration!(
     hamiltonianmatrix = calculate_hamiltonianmatrix(mfcluster.spincluster)
     groundstate_energy, groundstate = eigenmin(hamiltonianmatrix)
     new_magnetizations = calculate_magnetizations(spinoperators, groundstate)
-
     abserror = norm(new_magnetizations .- mfcluster.magnetizations)
+
+
     iteration = 0
-
+    error_increase_counter = 0
     verbose && println("Starting iteration with initial absolute error = $(abserror)")
+    
 
-    while abserror > abstol && iteration < max_iterations
+    while abserror > abstol && iteration < max_iterations && error_increase_counter < max_error_increase_count
 
         # update magnetizations
         set_magnetizations!(mfcluster, new_magnetizations, β)
@@ -150,17 +226,29 @@ function fixedpoint_iteration!(
         # calculate magnetization of ground-state
         calculate_magnetizations!(new_magnetizations, spinoperators, groundstate)
 
-        abserror = norm(new_magnetizations .- mfcluster.magnetizations)
+        # calculate absolute error
+        new_abserror = norm(new_magnetizations .- mfcluster.magnetizations)
+
+        # check if error has grown, if so increase counter
+        if new_abserror > abserror
+            error_increase_counter +=1
+        end
+
+        # set new abserror and increase iterations
+        abserror = copy(new_abserror)
         iteration += 1
-        #@show abserror
     end
 
+    # set magnetizations and magnetic fields to final value
     set_magnetizations!(mfcluster, new_magnetizations)
     recalculate_magnetic_fields!(mfcluster)
 
-    is_converged = iteration < max_iterations
+    # check if calculation Converged
+    is_converged = iteration < max_iterations && error_increase_counter < max_error_increase_count
+    
+    # print information
     verbose && println(
-        "Converged: $(is_converged). Iterations: $iteration/$(max_iterations). Absolute error: $abserror",
+        "Converged: $(is_converged). Iterations: $iteration/$(max_iterations). Absolute error: $abserror. Error increased $(error_increase_counter)/$(max_error_increase_count) times.",
     )
 
     return is_converged, iteration, abserror
@@ -229,73 +317,4 @@ function anderson_acceleration!(
     recalculate_magnetic_fields!(mfcluster)
 
     return sol
-end
-
-
-
-# given a geometric unitcell, bonds, couplings, and the linear size of the spin cluster,
-# calculate all inter and intracluster bonds. interclusterbonds will be treated
-# in a mean-field fashion (i.e. added as magnetic fields), while intraclusterbonds
-# will be treated exactly
-function get_meanfield_cluster_interactions(uc, bonds, Js, L)
-    #initialize periodic lattice (containing all bonds)
-    periodiclattice = Lattice(; L=L, periodic=[true, true])
-
-    #initialize open lattice (only containing intracluster bonds)
-    openlattice = Lattice(; L=L, periodic=[false, false])
-
-    intercluster_interactions = HeisenbergInteraction[]
-    intracluster_interactions = HeisenbergInteraction[]
-
-    # iterate over all specified bonds
-    for b in bonds
-        bond = b[1]
-        J = Js[b[2]]
-
-        # get interactions out of neighbor tables
-
-        # interactions insite the cluster
-        intrabonds = filter(
-            b -> !isempty(b), eachcol(build_neighbor_table(bond, uc, openlattice))
-        ) # filter in case table is empty
-
-        # all interactions
-        allbonds = eachcol(build_neighbor_table(bond, uc, periodiclattice))
-
-        # interactions between cluster is all bonds except the intraclusterbonds
-        interbonds = setdiff(allbonds, intrabonds)
-
-        for interbond in interbonds
-            push!(intercluster_interactions, HeisenbergInteraction(J, Tuple(interbond)))
-        end
-
-        for intrabond in intrabonds
-            push!(intracluster_interactions, HeisenbergInteraction(J, Tuple(intrabond)))
-        end
-    end
-
-    return intercluster_interactions, intracluster_interactions
-end
-
-function get_meanfield_cluster(uc, bonds, J, L)
-
-    # generate inter- and intra-cluster interactions
-    intercluster_interactions, intracluster_interactions = get_meanfield_cluster_interactions(uc, bonds, J, L)
-    
-    # calculate positions of lattice points
-    lattice = Lattice(L = L, periodic = [true, true])
-    locs = [site_to_loc(s, uc, lattice) for s in 1:nsites(uc, lattice)]
-    pos = [loc_to_pos(l..., uc) for l in locs]
-
-    # initialize spin-cluster with intracluster interactions and zero magnetic field
-    spincluster = SpinCluster(collect.(pos), intracluster_interactions, [zeros(3) for _ in 1:length(pos)])
-
-    # set up meanfield cluster with intercluster interactions (treated by mean-field) and zero magnetic field and magnetizations
-    mfcluster = MeanFieldCluster(spincluster, intercluster_interactions, [zeros(3) for _ in eachindex(pos)])    
-    
-    return mfcluster
-end
-
-function calculate_nsites(uc, L)
-    return uc.n * prod(L)
 end
