@@ -5,8 +5,8 @@ struct MeanFieldCluster
 end
 
 # some getter functions for convenience
-nsites(mfcluster::MeanFieldCluster) = mfcluster.spincluster.nsites
-magnetic_fields(mfcluster::MeanFieldCluster) = mfcluster.spincluster.magnetic_fields
+get_nsites(mfcluster::MeanFieldCluster) = mfcluster.spincluster.nsites
+get_magnetic_fields(mfcluster::MeanFieldCluster) = mfcluster.spincluster.magnetic_fields
 
 # expand methods available for SpinCluster to MeanFieldCluster
 function calculate_hamiltonianmatrix(mfcluster::MeanFieldCluster)
@@ -46,7 +46,7 @@ function set_magnetizations!(
     mfcluster::MeanFieldCluster, new_magnetizations::Vector{Float64}
 )
     return set_magnetizations!(
-        mfcluster, eachcol(reshape(new_magnetizations, (3, nsites(mfcluster))))
+        mfcluster, eachcol(reshape(new_magnetizations, (3, get_nsites(mfcluster))))
     )
 end
 
@@ -54,7 +54,7 @@ function set_magnetizations!(
     mfcluster::MeanFieldCluster, new_magnetizations::Vector{Float64}, β
 )
     return set_magnetizations!(
-        mfcluster, eachcol(reshape(new_magnetizations, (3, nsites(mfcluster)))), β
+        mfcluster, eachcol(reshape(new_magnetizations, (3, get_nsites(mfcluster)))), β
     )
 end
 
@@ -63,7 +63,7 @@ end
 function recalculate_magnetic_fields!(mfcluster::MeanFieldCluster)
 
     # deref 
-    fields = magnetic_fields(mfcluster)
+    fields = get_magnetic_fields(mfcluster)
     magnetizations = mfcluster.magnetizations
 
     # set to zero
@@ -110,7 +110,7 @@ function calculate_groundstate_energy(mfcluster::MeanFieldCluster)
     h = calculate_hamiltonianmatrix(mfcluster.spincluster)
     e0 = eigenmin(h)[1]
     eshift = calculate_energyshift(mfcluster)
-    return (e0 + eshift) / nsites(mfcluster)
+    return (e0 + eshift) / get_nsites(mfcluster)
 end
 
 # given a geometric unitcell, bonds, couplings, and the linear size of the spin cluster,
@@ -166,7 +166,7 @@ function get_meanfield_cluster(uc, bonds, J, L)
 
     # calculate positions of lattice points
     lattice = Lattice(; L=L, periodic=[true, true])
-    locs = [site_to_loc(s, uc, lattice) for s in 1:nsites(uc, lattice)]
+    locs = [site_to_loc(s, uc, lattice) for s in 1:get_nsites(uc, L)]
     pos = [loc_to_pos(l..., uc) for l in locs]
 
     # initialize spin-cluster with intracluster interactions and zero magnetic field
@@ -182,14 +182,14 @@ function get_meanfield_cluster(uc, bonds, J, L)
     return mfcluster
 end
 
-function calculate_nsites(uc, L)
+function get_nsites(uc, L)
     return uc.n * prod(L)
 end
 
 # self-consistently converge mean-field cluster, iteratively updating the magnetic fields according to mean-field bonds
 function fixedpoint_iteration!(
     mfcluster::MeanFieldCluster;
-    spinoperators=calculate_spinoperators(nsites(mfcluster)),
+    spinoperators=calculate_spinoperators(get_nsites(mfcluster)),
     max_iterations=1000,
     abstol=1e-8,
     β=0.5,
@@ -270,7 +270,7 @@ function anderson_acceleration!(
         "Setting up self-consistent solution of meanfield cluster via Anderson acceleration",
     )
 
-    spinoperators = calculate_spinoperators(nsites(mfcluster))
+    spinoperators = calculate_spinoperators(get_nsites(mfcluster))
     hamiltonianmatrix = calculate_hamiltonianmatrix(mfcluster.spincluster)
     groundstate_energy, groundstate = eigenmin(hamiltonianmatrix)
     new_magnetizations = calculate_magnetizations(spinoperators, groundstate)

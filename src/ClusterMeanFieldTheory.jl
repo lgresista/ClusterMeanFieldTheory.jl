@@ -21,7 +21,7 @@ export calculate_magnetizations!,calculate_magnetizations
 
 # CMFT
 export MeanFieldCluster
-export nsites, magnetic_fields
+export get_nsites, get_magnetic_fields
 export set_magnetizations!, recalculate_magnetic_fields!
 export calculate_groundstate_energy, calculate_energyshift
 export get_meanfield_cluster_interactions, get_meanfield_cluster, calculate_nsites
