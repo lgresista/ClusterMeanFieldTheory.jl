@@ -18,6 +18,7 @@ export calculate_spinoperators
 export expectation_value
 export eigenmin
 export calculate_magnetizations!,calculate_magnetizations
+export get_periodic_cluster_interactions, get_periodic_cluster
 
 # CMFT
 export MeanFieldCluster
