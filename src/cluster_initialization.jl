@@ -112,7 +112,7 @@ function get_latticevecs_3x(uc)
 end
 
 # full new unitcell
-function get_uc_3x(uc)
+function get_unitcell_3x(uc)
     return UnitCell(get_latticevecs_3x(uc), get_3x_basisvecs(uc))
 end
 
@@ -179,4 +179,42 @@ function get_bonds_3x(bonds, uc)
     end
 
     return bonds3x
+end
+
+# create spin cluster (not mean-field) out of unit cell with periodic boundary conditions
+function get_periodic_cluster(uc, bonds, Js, L)
+    #get interactions
+    interactions = get_periodic_cluster_interactions(uc, bonds, Js, L)
+
+    # calculate positions of lattice points
+    lattice = Lattice(; L=L, periodic=[true, true])
+    locs = [site_to_loc(s, uc, lattice) for s in 1:get_nsites(uc, L)]
+    pos = [loc_to_pos(l..., uc) for l in locs]
+    
+    # initialize spin-cluster with periodic interactions and zero magnetic field
+    return SpinCluster(collect.(pos), interactions, [zeros(3) for _ in 1:length(pos)])
+end
+
+function get_periodic_cluster_interactions(uc, bonds, Js, L)
+    # define periodic lattice
+    periodiclattice = Lattice(; L=L, periodic=[true, true])
+
+    # convert bonds of unit-cell to interactions on periodic cluster
+    interactions = HeisenbergInteraction[]
+
+    for b in bonds
+        # unpack 
+        bond = b.bond
+        J = Js[b.label]
+
+        # get bonds out of neighbor tables
+        periodic_bonds = eachcol(build_neighbor_table(bond, uc, periodiclattice))
+
+        # push interaction with appropriate coupling
+        for pbond in periodic_bonds
+            push!(interactions, HeisenbergInteraction(J, Tuple(pbond)))
+        end
+    end
+
+    return interactions
 end
