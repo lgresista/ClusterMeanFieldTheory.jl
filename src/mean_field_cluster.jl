@@ -120,7 +120,7 @@ function fixedpoint_iteration!(
     max_iterations=1000,
     abstol=1e-8,
     β=0.5,
-    max_error_increase_count = Inf,
+    max_error_increase_count=Inf,
     verbose=true,
 )
     verbose && println("Setting up self-consistent solution of meanfield cluster")
@@ -130,13 +130,13 @@ function fixedpoint_iteration!(
     new_magnetizations = calculate_magnetizations(spinoperators, groundstate)
     abserror = norm(new_magnetizations .- mfcluster.magnetizations)
 
-
     iteration = 0
     error_increase_counter = 0
     verbose && println("Starting iteration with initial absolute error = $(abserror)")
-    
 
-    while abserror > abstol && iteration < max_iterations && error_increase_counter < max_error_increase_count
+    while abserror > abstol &&
+              iteration < max_iterations &&
+              error_increase_counter < max_error_increase_count
 
         # update magnetizations
         set_magnetizations!(mfcluster, new_magnetizations, β)
@@ -158,7 +158,7 @@ function fixedpoint_iteration!(
 
         # check if error has grown, if so increase counter
         if new_abserror > abserror
-            error_increase_counter +=1
+            error_increase_counter += 1
         end
 
         # set new abserror and increase iterations
@@ -172,7 +172,7 @@ function fixedpoint_iteration!(
 
     # check if calculation Converged
     is_converged = abserror <= abstol
-    
+
     # print information
     verbose && println(
         "Converged: $(is_converged). Iterations: $iteration/$(max_iterations). Absolute error: $abserror. Error increased $(error_increase_counter)/$(max_error_increase_count) times.",

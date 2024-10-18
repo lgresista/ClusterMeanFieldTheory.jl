@@ -5,13 +5,15 @@ struct LabeledBond{D}
 end
 
 function Base.show(io::IO, lbond::LabeledBond{D}) where {D}
-    print(io, "LabeledBond{$(D)}(displacement=$(lbond.bond.displacement), orbitals=$(lbond.bond.orbitals), label=$(lbond.label))")
+    return print(
+        io,
+        "LabeledBond{$(D)}(displacement=$(lbond.bond.displacement), orbitals=$(lbond.bond.orbitals), label=$(lbond.label))",
+    )
 end
 
-function LabeledBond(orbitals, displacement, label :: Int)
+function LabeledBond(orbitals, displacement, label::Int)
     return LabeledBond(Bond(orbitals, displacement), label)
 end
-
 
 #Return a meanfield cluster from a primitive unitcell repeated L[i] times in each bravais dimension i.
 function get_meanfield_cluster(
@@ -45,7 +47,9 @@ end
 # calculate all inter and intracluster bonds. interclusterbonds will be treated
 # in a mean-field fashion (i.e. added as magnetic fields), while intraclusterbonds
 # will be treated exactly
-function get_meanfield_cluster_interactions(uc::UnitCell, bonds::Vector{<:LabeledBond}, Js, L)
+function get_meanfield_cluster_interactions(
+    uc::UnitCell, bonds::Vector{<:LabeledBond}, Js, L
+)
     #initialize periodic lattice (containing all bonds)
     periodiclattice = Lattice(; L=L, periodic=[true, true])
 
@@ -154,7 +158,6 @@ function get_bonds_3x(bonds, uc)
     bonds3x = LabeledBond[]
 
     for uc_n in uc_ns, b in bonds
-
         bond = b.bond
         label = b.label
 

@@ -1,5 +1,5 @@
 #digits function for base 2
-digits2(i :: Integer) = digits(i; base = 2, pad = 8)
+digits2(i::Integer) = digits(i; base=2, pad=8)
 
 for _ in 0:9
     n = rand(UInt8)
@@ -10,7 +10,7 @@ for _ in 0:9
         np = CMFT.setbit(n, i)
 
         vp = copy(v)
-        vp[i+1] = 1
+        vp[i + 1] = 1
 
         @test digits2(np) == vp
     end
@@ -20,7 +20,7 @@ for _ in 0:9
         np = CMFT.unsetbit(n, i)
 
         vp = copy(v)
-        vp[i+1] = 0
+        vp[i + 1] = 0
 
         @test digits2(np) == vp
     end
@@ -31,10 +31,10 @@ for _ in 0:9
 
         vp = copy(v)
 
-        if vp[i+1] == 0
-            vp[i+1] = 1
-        else 
-            vp[i+1] = 0
+        if vp[i + 1] == 0
+            vp[i + 1] = 1
+        else
+            vp[i + 1] = 0
         end
 
         @test digits2(np) == vp
@@ -46,15 +46,16 @@ for _ in 0:9
             np = CMFT.flipbits(n, i, j)
 
             vp = copy(v)
-            if vp[i+1] == 0
-                vp[i+1] = 1
-            else 
-                vp[i+1] = 0
+            if vp[i + 1] == 0
+                vp[i + 1] = 1
+            else
+                vp[i + 1] = 0
             end
-            if vp[j+1] == 0
-                vp[j+1] = 1
-            else 
-                vp[j+1] = 0
+
+            if vp[j + 1] == 0
+                vp[j + 1] = 1
+            else
+                vp[j + 1] = 0
             end
 
             @test digits2(np) == vp

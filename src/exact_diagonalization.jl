@@ -181,32 +181,34 @@ end
 function calculate_spinoperators(N)
 
     # spin operators as matrices for each site and each spin component S^x, S^y, S^z
-    spinoperators = [Vector{Hermitian{ComplexF64, SparseMatrixCSC{ComplexF64, Int64}}}(undef, 3) for _  in 1:N]
+    spinoperators = [
+        Vector{Hermitian{ComplexF64,SparseMatrixCSC{ComplexF64,Int64}}}(undef, 3) for
+        _ in 1:N
+    ]
 
     # buffer for S^z eigenvalues
     szs = zeros(Float64, 2^N)
-    
+
     # buffer state m from spinflip
     ms = zeros(UInt64, 2^N)
-    
+
     #iterate over all sites
-    for i in 0:(N - 1)        
-        
+    for i in 0:(N - 1)
+
         #iterate over all states
         for n in zero(UInt):(2^N - 1)
             #get S^z eigenvalue (±1/2) of spin i
-            szs[n+1] = getspin(n, i)
-            ms[n+1] = flipbit(n, i) + 1
+            szs[n + 1] = getspin(n, i)
+            ms[n + 1] = flipbit(n, i) + 1
         end
-        
-        spinoperators[i+1][1] = Hermitian(sparse(ms, 1:2^N, fill(0.5, 2^N))) #x
-        spinoperators[i+1][2] = Hermitian(sparse(ms, 1:2^N, im .* szs)) #y
-        spinoperators[i+1][3] = Hermitian(sparse(1:2^N, 1:2^N, szs)) #z
+
+        spinoperators[i + 1][1] = Hermitian(sparse(ms, 1:(2^N), fill(0.5, 2^N))) #x
+        spinoperators[i + 1][2] = Hermitian(sparse(ms, 1:(2^N), im .* szs)) #y
+        spinoperators[i + 1][3] = Hermitian(sparse(1:(2^N), 1:(2^N), szs)) #z
     end
-        
+
     return spinoperators
 end
-
 
 ## Diagonalization routines and observables ##
 
@@ -235,7 +237,7 @@ end
 =#
 
 # calculate lowest eigenvalue and vector using Lanczos method from KrylovKit.jl
-function eigenmin(H :: AbstractMatrix)
+function eigenmin(H::AbstractMatrix)
     vals, vecs, info = eigsolve(H, 1, :SR)
     return vals[1], vecs[1]
 end
@@ -262,7 +264,7 @@ end
 function get_periodic_cluster_interactions(uc, bonds, Js, L)
     # define periodic lattice
     periodiclattice = Lattice(; L=L, periodic=[true, true])
-   
+
     # convert bonds of unit-cell to interactions on periodic cluster
     interactions = HeisenbergInteraction[]
 
@@ -293,7 +295,5 @@ function get_periodic_cluster(uc, bonds, Js, L)
     pos = [loc_to_pos(l..., uc) for l in locs]
 
     # initialize spin-cluster with periodic interactions and zero magnetic field
-    return  SpinCluster(
-        collect.(pos), interactions, [zeros(3) for _ in 1:length(pos)]
-    )
+    return SpinCluster(collect.(pos), interactions, [zeros(3) for _ in 1:length(pos)])
 end
