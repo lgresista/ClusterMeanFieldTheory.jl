@@ -6,10 +6,10 @@ E0_dimer_collinear(J, s) = -J[1]/4 -J[1] * s^2 + 4 * J[2] * s^2 - sqrt(J[1]^2 + 
     uc = UnitCell(lattice_vecs = [[1.,0.],[0.,1.]], basis_vecs= [[0.,0.]])
 
     bonds = [
-        (Bond((1, 1), (1, 0)), 1),
-        (Bond((1, 1), (0, 1)), 1),
-        (Bond((1, 1), (1, 1)), 2),
-        (Bond((1, 1), (1, -1)), 2)
+        LabeledBond((1, 1), (1, 0), 1),
+        LabeledBond((1, 1), (0, 1), 1),
+        LabeledBond((1, 1), (1, 1), 2),
+        LabeledBond((1, 1), (1, -1), 2)
     ]
 
     for _ in 1:1000
