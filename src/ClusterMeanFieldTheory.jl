@@ -5,6 +5,8 @@ using LinearAlgebra
 using NLsolve
 using SparseArrays
 using KrylovKit
+using Retry
+using HDF5
 
 import LatticeUtilities: nsites
 
@@ -32,5 +34,6 @@ export fixedpoint_iteration!, anderson_acceleration!
 export LabeledBond, get_bond, get_label
 export get_meanfield_cluster_interactions, get_meanfield_cluster, calculate_nsites
 export get_unitcell_3x, get_bonds_3x, loc_to_loc3x
+export run_cmft, run_batch_cmft
 
 end
