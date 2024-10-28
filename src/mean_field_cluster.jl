@@ -161,9 +161,14 @@ function fixedpoint_iteration!(
             error_increase_counter += 1
         end
 
-        # set new abserror and increase iterations
+        # set new abserror
         abserror = copy(new_abserror)
+
+        verbose && println("Iteration: $iteration/$(max_iterations). Absolute error: $abserror. Error increased $(error_increase_counter)/$(max_error_increase_count) times.")
+
+        # increment iterations
         iteration += 1
+
     end
 
     # set magnetizations and magnetic fields to final value
