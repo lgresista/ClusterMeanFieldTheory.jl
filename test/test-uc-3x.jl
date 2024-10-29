@@ -29,7 +29,7 @@
     # Iterate over the defined unit cells (hexagonal and triangular).
     for uc in (uc_hex, uc_tri)
         # Generate the 3x extended unit cell.
-        uc3x = get_uc_3x(uc)
+        uc3x = get_unitcell_3x(uc)
 
         # Test that converting locations from the original unit cell to the 3x extended cell works correctly.
         for i in -10:10, j in -10:10, b in eachindex(uc.basis_vecs)

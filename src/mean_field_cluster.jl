@@ -123,7 +123,10 @@ function fixedpoint_iteration!(
     max_error_increase_count=Inf,
     verbose=true,
 )
-    verbose && println("Setting up self-consistent solution of meanfield cluster")
+    if verbose
+        println("Setting up self-consistent solution of meanfield cluster")
+        flush(stdout)
+    end
 
     hamiltonianmatrix = calculate_hamiltonianmatrix(mfcluster.spincluster)
     groundstate_energy, groundstate = eigenmin(hamiltonianmatrix)
@@ -132,7 +135,10 @@ function fixedpoint_iteration!(
 
     iteration = 0
     error_increase_counter = 0
-    verbose && println("Starting iteration with initial absolute error = $(abserror)")
+    if verbose
+        println("Starting iteration with initial absolute error = $(abserror)")
+        flush(stdout)
+    end
 
     while abserror > abstol &&
               iteration < max_iterations &&
@@ -164,11 +170,15 @@ function fixedpoint_iteration!(
         # set new abserror
         abserror = copy(new_abserror)
 
-        verbose && println("Iteration: $iteration/$(max_iterations). Absolute error: $abserror. Error increased $(error_increase_counter)/$(max_error_increase_count) times.")
+        if verbose
+            println(
+                "Iteration: $iteration/$(max_iterations). Absolute error: $abserror. Error increased $(error_increase_counter)/$(max_error_increase_count) times.",
+            )
+            flush(stdout)
+        end
 
         # increment iterations
         iteration += 1
-
     end
 
     # set magnetizations and magnetic fields to final value
@@ -179,9 +189,12 @@ function fixedpoint_iteration!(
     is_converged = abserror <= abstol
 
     # print information
-    verbose && println(
-        "Converged: $(is_converged). Iterations: $iteration/$(max_iterations). Absolute error: $abserror. Error increased $(error_increase_counter)/$(max_error_increase_count) times.",
-    )
+    if verbose
+        println(
+            "Converged: $(is_converged). Iterations: $iteration/$(max_iterations). Absolute error: $abserror. Error increased $(error_increase_counter)/$(max_error_increase_count) times.",
+        )
+        flush(stdout)
+    end
 
     return is_converged, iteration, abserror
 end
@@ -198,9 +211,12 @@ function anderson_acceleration!(
     show_trace=false,
     extended_trace=false,
 )
-    verbose && println(
-        "Setting up self-consistent solution of meanfield cluster via Anderson acceleration",
-    )
+    if verbose
+        println(
+            "Setting up self-consistent solution of meanfield cluster via Anderson acceleration",
+        )
+        flush(stdout)
+    end
 
     spinoperators = calculate_spinoperators(get_nsites(mfcluster))
     hamiltonianmatrix = calculate_hamiltonianmatrix(mfcluster.spincluster)
