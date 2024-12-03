@@ -113,6 +113,14 @@ function calculate_groundstate_energy(mfcluster::MeanFieldCluster)
     return (e0 + eshift) / get_nsites(mfcluster)
 end
 
+function calculate_groundstate_and_energy(mfcluster::MeanFieldCluster)
+    h = calculate_hamiltonianmatrix(mfcluster.spincluster)
+    E, groundstate = eigenmin(h)
+    eshift = calculate_energyshift(mfcluster)
+    e0 = (E + eshift) / get_nsites(mfcluster)
+    return e0, groundstate
+end
+
 # self-consistently converge mean-field cluster, iteratively updating the magnetic fields according to mean-field bonds
 function fixedpoint_iteration!(
     mfcluster::MeanFieldCluster;

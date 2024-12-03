@@ -23,7 +23,7 @@ export get_periodic_cluster_interactions, get_periodic_cluster
 export MeanFieldCluster
 export get_nsites, get_magnetic_fields
 export set_magnetizations!, recalculate_magnetic_fields!
-export calculate_groundstate_energy, calculate_energyshift
+export calculate_groundstate_energy, calculate_energyshift, calculate_groundstate_and_energy
 export fixedpoint_iteration!, anderson_acceleration!
 
 # help cluster initialization
