@@ -217,6 +217,87 @@ function expectation_value(operator::Hermitian, state)
     return real(dot(state, operator, state))
 end
 
+# calculate <state| S1 × S2 |state> for three-component operators S1 and S2
+function crossproduct_expectation(S1, S2, state)
+    v1 = S1 .* Ref(state)
+    v2 = S2 .* Ref(state)
+
+    return [
+        dot(v1[2], v2[3]) - dot(v1[3], v2[2]),
+        dot(v1[3], v2[1]) - dot(v1[1], v2[3]),
+        dot(v1[1], v2[2]) - dot(v1[2], v2[1]),
+    ]
+end
+
+# calculate the expectation value of an operator defined in a subsystem, i.e. of the form
+# O_full = I_env ⊗ O_subsystem, by specifying O_subsystem and the sites of the subsystem.
+function expectation_value_subsystem(
+    operator::Hermitian,
+    state,
+    subsystem_sites,
+    N;
+    environment_groups=get_environment_groups(subsystem_sites, N),
+)
+    val = 0.0
+
+    for n_env in eachindex(environment_groups)
+
+        # basis states with fixed environment state (n_env - 1)
+        state_indices = environment_groups[n_env]
+
+        # project state into subsystem basis
+        projected_state = state[state_indices]
+
+        # calculate expectation value in subsystem
+        val += expectation_value(operator, projected_state)
+    end
+
+    return val
+end
+
+# calculate projected state index into a subsystem with less sites
+function get_subsystem_state_index(n::Integer, subsystem_sites::Vector{<:Integer})
+    n_proj = zero(UInt)
+
+    for (i, site) in enumerate(subsystem_sites)
+        if getbit(n, site - 1) == true
+            n_proj = setbit(n_proj, i - 1)
+        end
+    end
+    return n_proj
+end
+
+# for a system with N sites and a subsystem with given sites, e.g. [2, 4, 5, 6]
+# group all states by the state of their environment (complement of the subsystem)
+# also saves the projected state index in the subsystem
+function get_environment_groups(subsystem_sites, N)
+    # get complement of subsystem
+    environment_sites = [i for i in 1:N if i ∉ subsystem_sites]
+
+    # number of sites in subsystem and environment
+    N_s = length(subsystem_sites)
+    N_e = length(environment_sites)
+
+    # initialize projection table grouped by environment (one for each environment state)
+    environment_groups = [zeros(Int, 2^N_s) for _ in 1:(2^N_e)]
+
+    # loop over all global state indices
+    for n in zero(UInt):(2^N - 1)
+        # get state-index subsystem and environment
+        n_proj = get_subsystem_state_index(n, subsystem_sites)
+        n_env = get_subsystem_state_index(n, environment_sites)
+
+        environment_groups[n_env + 1][n_proj + 1] = n + 1 # 
+    end
+    return environment_groups
+end
+
+# calculate lowest eigenvalue and vector using Lanczos method from KrylovKit.jl
+function eigenmin(H::AbstractMatrix)
+    vals, vecs, info = eigsolve(H, 1, :SR)
+    return vals[1], vecs[1]
+end
+
 #= Old version not working on sparse matrices (faster only for small matrices)
 function eigenmin(mat :: AbstractMatrix)
     vals, vecs = eigen(mat, 1:1)
@@ -235,12 +316,6 @@ function eigenmin(H :: Hermitian)
     return real(decomp.eigenvalues[idx]), decomp.Q[:, idx]
 end
 =#
-
-# calculate lowest eigenvalue and vector using Lanczos method from KrylovKit.jl
-function eigenmin(H::AbstractMatrix)
-    vals, vecs, info = eigsolve(H, 1, :SR)
-    return vals[1], vecs[1]
-end
 
 # calculate magnetization m_i^a = <state|S_i^a|state> for all spinoperators
 # store into magnetizations

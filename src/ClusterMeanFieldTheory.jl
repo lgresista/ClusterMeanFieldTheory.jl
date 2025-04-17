@@ -14,7 +14,8 @@ include("cluster_initialization.jl")
 export HeisenbergInteraction, SpinCluster
 export calculate_hamiltonianmatrix!, calculate_hamiltonianmatrix
 export calculate_spinoperators
-export expectation_value
+export expectation_value, crossproduct_expectation
+export expectation_value_subsystem, get_subsystem_state_index, get_environment_groups
 export eigenmin
 export calculate_magnetizations!, calculate_magnetizations
 export get_periodic_cluster_interactions, get_periodic_cluster
