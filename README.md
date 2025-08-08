@@ -21,7 +21,8 @@ $$
 
 with SU(2) spin-operators $\mathbf{S}_i$ with $S = 1/2$.
 
-The main idea of CMFT is to devidie the full crystal lattice into small clusters, and then treat the interactions of spins within a small cluster $\mathcal{C}$ exactly, but approximate interactions of spins in different clusters with a standard mean-field decoupling
+The main idea of CMFT is to devidie the full crystal lattice into small clusters, and then treat the interactions of spins within a small cluster $c$ exactly, but approximate interactions of spins in different clusters with a standard mean-field decoupling
+
 $$    
     \mathbf{S}_i \cdot \mathbf{S}_j \approx \langle \mathbf{S}_i \rangle \cdot \mathbf{S}_j + \mathbf{S}_i \cdot \langle \mathbf{S}_j \rangle - \langle \mathbf{S}_i \rangle \cdot \langle \mathbf{S}_j \rangle \, .
 $$
@@ -29,48 +30,48 @@ $$
 This makes it possible to rewrite the Hamiltonian as a sum of single-cluster Hamiltonians
 
 $$
-H = \sum_{i} H_\mathcal{C}
+H = \sum_{i} H_c
 $$
 
 of the form
 
 $$
-     H_\mathcal{C} = \sum_{i, j \in \mathcal{C}} J_{ij} \mathbf{S}_i \cdot \mathbf{S}_j + 
-     \sum_{i \in C} \mathbf{h}^\mathcal{C}_i \cdot \mathbf{S}_i + C_\mathcal{C}
+     H_c = \sum_{i, j \in c} J_{ij} \mathbf{S}_i \cdot \mathbf{S}_j + 
+     \sum_{i \in C} \mathbf{h}^c_i \cdot \mathbf{S}_i + C_c
 $$
 
-where the effective fields $\mathbf{h}_i^\mathcal{C}$ and the energy shift $C^\mathcal{C}$ originate from the inter-cluster mean-field interactions and a priori depend on the magnetizations $\langle \mathbf{S}_j \rangle$ of sites also in neighboring clusters. For the clusters to fully decouple, we use periodic boundary conditions by assuming that the magnetization patterns repeat identically across all clusters. To this end, we split the site index into $i = (\mathcal{C}, \alpha)$, where $\mathcal{C}$ denotes the cluster and $\alpha = 1, \dots, N_\mathcal{C}$ the site within this cluster. Periodic boundary conditions then imply 
+where the effective fields $\mathbf{h}_i^c$ and the energy shift $C^c$ originate from the inter-cluster mean-field interactions and a priori depend on the magnetizations $\langle \mathbf{S}_j \rangle$ of sites also in neighboring clusters. For the clusters to fully decouple, we use periodic boundary conditions by assuming that the magnetization patterns repeat identically across all clusters. To this end, we split the site index into $i = (c, \alpha)$, where $c$ denotes the cluster and $\alpha = 1, \dots, N_c$ the site within this cluster. Periodic boundary conditions then imply 
 $$
-\langle \mathbf{S}_{\mathcal{C}\alpha} \rangle = \langle \mathbf{S}_{\mathcal{C}'\alpha}\rangle \equiv \mathbf{m}_\alpha \, ,
+\langle \mathbf{S}_{c\alpha} \rangle = \langle \mathbf{S}_{c'\alpha}\rangle \equiv \mathbf{m}_\alpha \, ,
 $$
 
-to hold for all clusters $\mathcal{C}, \mathcal{C}'$. This defines the $N_C$ cluster-independent magnetizations $\mathbf{m}_\alpha$, from which the now cluster-independent effective fields $\mathbf{h}_\alpha$ and the energy shift $C$ can be calculated using the formulas
+to hold for all clusters $c, c'$. This defines the $N_C$ cluster-independent magnetizations $\mathbf{m}_\alpha$, from which the now cluster-independent effective fields $\mathbf{h}_\alpha$ and the energy shift $C$ can be calculated using the formulas
 
 $$
 \mathbf{h_\alpha} = 
-\sum_{\mathcal{C}' \neq \mathcal{C}} \sum_{\beta = 1}^{N_\mathcal{C}}
-\left(J_{\mathcal{C}\alpha, \mathcal{C}'\beta} + J_{\mathcal{C}'\beta, \mathcal{C}\alpha}\right)\mathbf{m}_\beta
+\sum_{c' \neq c} \sum_{\beta = 1}^{N_c}
+\left(J_{c\alpha, c'\beta} + J_{c'\beta, c\alpha}\right)\mathbf{m}_\beta
 $$
 
 and the constant energy shift \( C \) is
 
 $$
 C = 
-\sum_{\mathcal{C}' \neq \mathcal{C}} \sum_{\alpha,\beta = 1}^{N_\mathcal{C}}
-\left(J_{\mathcal{C}\alpha, \mathcal{C}'\beta} + J_{\mathcal{C}'\beta, \mathcal{C}\alpha}\right)
+\sum_{c' \neq c} \sum_{\alpha,\beta = 1}^{N_c}
+\left(J_{c\alpha, c'\beta} + J_{c'\beta, c\alpha}\right)
 \mathbf{m}_\alpha \mathbf{m}_\beta \, 
 $$
 
-where $\mathcal{C}$ is now an arbitrary reference cluster.
+where $c$ is now an arbitrary reference cluster.
 
-Since the single-cluster Hamiltonian $H_\mathcal{C}$ depends on the magnetizations $\mathbf{m}_\alpha$ and these in turn depend on the ground state of $H_\mathcal{C}$, the magnetizations must be determined self-consistently. This is what is implemented in this package.
+Since the single-cluster Hamiltonian $H_c$ depends on the magnetizations $\mathbf{m}_\alpha$ and these in turn depend on the ground state of $H_c$, the magnetizations must be determined self-consistently. This is what is implemented in this package.
 
 ## Fixed-point iteration for the ground state
 
 For the self-consistent determination of the ground state, this package uses a damped fixed-point iteration, where at each iteration step $n$, an updated set of magnetizations $\mathbf{m}_\alpha^{n+1}$ is computed based on the values from the previous step $\mathbf{m}_\alpha^n$ as follows:  
 
 1. Calculate the effective fields $\mathbf{h}_\alpha$ from $\mathbf{m}_\alpha^n$ using the expression for the effective fields given above.  
-2. Determine the ground state of the resulting single-cluster Hamiltonian $H_\mathcal{C}$ using the Lanczos algorithm.  
+2. Determine the ground state of the resulting single-cluster Hamiltonian $H_c$ using the Lanczos algorithm.  
 3. Calculate the magnetizations  
    $$
    \mathbf{m}_\alpha^{\mathrm{new}} = \langle \mathbf{S}_\alpha \rangle
