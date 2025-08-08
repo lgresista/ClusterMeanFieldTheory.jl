@@ -24,7 +24,7 @@ with SU(2) spin-operators $\mathbf{S}_i$ with $S = 1/2$.
 The main idea of CMFT is to devidie the full crystal lattice into small clusters, and then treat the interactions of spins within a small cluster $c$ exactly, but approximate interactions of spins in different clusters with a standard mean-field decoupling
 
 $$    
-    \mathbf{S}_i \cdot \mathbf{S}_j \approx \langle \mathbf{S}_i \rangle \cdot \mathbf{S}_j + \mathbf{S}_i \cdot \langle \mathbf{S}_j \rangle - \langle \mathbf{S}_i \rangle \cdot \langle \mathbf{S}_j \rangle \, .
+    \mathbf{S}_i  \mathbf{S}_j \approx \langle \mathbf{S}_i \rangle  \mathbf{S}_j + \mathbf{S}_i  \langle \mathbf{S}_j \rangle - \langle \mathbf{S}_i \rangle  \langle \mathbf{S}_j \rangle \, .
 $$
 
 This makes it possible to rewrite the Hamiltonian as a sum of single-cluster Hamiltonians
