@@ -33,10 +33,10 @@ $$
 H = \sum_{i} H_c
 $$
 
-of the form
+of the form $
 
 $$
-H_c = \sum_{i, j  c} J_{ij} \mathbf{S}_i \mathbf{S}_j + 
+H_c = \sum_{i j  c} J_{ij} \mathbf{S}_i \mathbf{S}_j + 
 \sum_{i  C} \mathbf{h}^c_i \mathbf{S}_i + C_c
 $$
 
