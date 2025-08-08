@@ -36,8 +36,7 @@ $$
 of the form $
 
 $$
-H_c = \sum_{i j  c} J_{ij} \mathbf{S}_i \mathbf{S}_j + 
-\sum_{i  C} \mathbf{h}^c_i \mathbf{S}_i + C_c
+H_c = \sum_{i} J_{ij} \mathbf{S}_i \mathbf{S}_j + 
 $$
 
 where the effective fields $\mathbf{h}_i^c$ and the energy shift $C^c$ originate from the inter-cluster mean-field interactions and a priori depend on the magnetizations $\langle \mathbf{S}_j \rangle$ of sites also in neighboring clusters. For the clusters to fully decouple, we use periodic boundary conditions by assuming that the magnetization patterns repeat identically across all clusters. To this end, we split the site index into $i = (c, \alpha)$, where $c$ denotes the cluster and $\alpha = 1, \dots, N_c$ the site within this cluster. Periodic boundary conditions then imply 
