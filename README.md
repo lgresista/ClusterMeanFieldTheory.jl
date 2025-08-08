@@ -23,7 +23,7 @@ with SU(2) spin-operators $\mathbf{S}_i$ with $S = 1/2$.
 
 The main idea of CMFT is to devidie the full crystal lattice into small clusters, and then treat the interactions of spins within a small cluster $c$ exactly, but approximate interactions of spins in different clusters with a standard mean-field decoupling
 
-$$    
+$$
     \mathbf{S}_i  \mathbf{S}_j \approx \langle \mathbf{S}_i \rangle  \mathbf{S}_j + \mathbf{S}_i  \langle \mathbf{S}_j \rangle - \langle \mathbf{S}_i \rangle  \langle \mathbf{S}_j \rangle \, .
 $$
 
@@ -36,8 +36,8 @@ $$
 of the form
 
 $$
-     H_c = \sum_{i, j \in c} J_{ij} \mathbf{S}_i \cdot \mathbf{S}_j + 
-     \sum_{i \in C} \mathbf{h}^c_i \cdot \mathbf{S}_i + C_c
+H_c = \sum_{i, j \in c} J_{ij} \mathbf{S}_i \mathbf{S}_j + 
+\sum_{i \in C} \mathbf{h}^c_i \mathbf{S}_i + C_c
 $$
 
 where the effective fields $\mathbf{h}_i^c$ and the energy shift $C^c$ originate from the inter-cluster mean-field interactions and a priori depend on the magnetizations $\langle \mathbf{S}_j \rangle$ of sites also in neighboring clusters. For the clusters to fully decouple, we use periodic boundary conditions by assuming that the magnetization patterns repeat identically across all clusters. To this end, we split the site index into $i = (c, \alpha)$, where $c$ denotes the cluster and $\alpha = 1, \dots, N_c$ the site within this cluster. Periodic boundary conditions then imply 
